@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { Package, Truck, CheckCircle, Clock, MapPin, Search, Building, Save, AlertCircle, CreditCard, Users, Phone, Palette, XCircle } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, MapPin, Search, Building, Save, AlertCircle, CreditCard, Users, Phone, Palette, XCircle, UserCheck } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
-  const { user, orders, updateOrderStatus, t, artisans } = useStore();
-  const [activeTab, setActiveTab] = useState<'orders' | 'bank' | 'producers'>('orders');
+  const { user, orders, updateOrderStatus, t, artisans, teamMembers, verifyTeamMember } = useStore();
+  const [activeTab, setActiveTab] = useState<'orders' | 'bank' | 'producers' | 'team'>('orders');
 
   // Bank Form State
   const [bankData, setBankData] = useState({
@@ -41,6 +41,8 @@ const AdminDashboard: React.FC = () => {
     }, 1500);
   };
 
+  const pendingTeamMembers = teamMembers.filter(m => !m.isVerified);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,6 +67,12 @@ const AdminDashboard: React.FC = () => {
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'producers' ? 'bg-tribal-100 text-tribal-800 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <Users size={16} /> {t('producers')}
+            </button>
+            <button 
+              onClick={() => setActiveTab('team')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'team' ? 'bg-tribal-100 text-tribal-800 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <UserCheck size={16} /> {t('teamManagement')}
             </button>
             <button 
               onClick={() => setActiveTab('bank')}
@@ -271,6 +279,65 @@ const AdminDashboard: React.FC = () => {
               )}
             </div>
           </div>
+        )}
+        
+        {activeTab === 'team' && (
+             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <UserCheck className="text-tribal-600" size={20} />
+                        {t('pendingApprovals')}
+                    </h2>
+                </div>
+                
+                <div className="divide-y divide-gray-100">
+                    {pendingTeamMembers.length === 0 ? (
+                        <div className="p-12 text-center text-gray-500">
+                            {t('noPendingTeam')}
+                        </div>
+                    ) : (
+                        pendingTeamMembers.map(member => (
+                            <div key={member.id} className="p-6 flex items-center justify-between hover:bg-gray-50">
+                                <div>
+                                    <h3 className="font-bold text-gray-900">{member.name}</h3>
+                                    <div className="text-sm text-gray-500 space-y-1 mt-1">
+                                        <div className="flex items-center gap-2"><Users size={14}/> {member.username}</div>
+                                        <div className="flex items-center gap-2"><Phone size={14}/> {member.contact}</div>
+                                        <div className="flex items-center gap-2">@{member.email}</div>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => verifyTeamMember(member.id)}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 flex items-center gap-2 shadow-sm"
+                                >
+                                    <CheckCircle size={18} /> {t('approve')}
+                                </button>
+                            </div>
+                        ))
+                    )}
+                    
+                    {/* List of already active members could go below here */}
+                    {teamMembers.filter(m => m.isVerified).length > 0 && (
+                        <div className="p-4 bg-gray-50 text-xs font-semibold text-gray-500 border-t border-gray-200 uppercase tracking-wide">
+                            {t('approved')} Members
+                        </div>
+                    )}
+                     {teamMembers.filter(m => m.isVerified).map(member => (
+                        <div key={member.id} className="p-4 px-6 flex items-center justify-between opacity-75">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold">
+                                    {member.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div className="font-medium text-gray-900">{member.name}</div>
+                                    <div className="text-xs text-gray-500">{member.username}</div>
+                                </div>
+                             </div>
+                             <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">Active</span>
+                        </div>
+                     ))}
+                </div>
+             </div>
         )}
 
         {activeTab === 'bank' && (

@@ -2,58 +2,72 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserRole } from '../types';
-import { UserCircle, Briefcase, ShieldCheck, UserPlus, Smartphone, KeyRound, ArrowLeft, ArrowRight } from 'lucide-react';
+import { UserCircle, Briefcase, ShieldCheck, UserPlus, Smartphone, KeyRound, ArrowLeft, ArrowRight, Users, Mail, Lock, User } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login, t, artisans } = useStore();
+  const { login, loginWithPassword, registerTeamMember, t, artisans } = useStore();
   const navigate = useNavigate();
 
-  // State for Producer OTP flow
-  const [step, setStep] = useState<'role' | 'mobile' | 'otp'>('role');
+  // State for Flow
+  const [step, setStep] = useState<'role' | 'mobile' | 'otp' | 'password' | 'register_team'>('role');
+  
+  // Producer OTP Flow State
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
 
+  // Admin/Team Password Flow State
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [roleContext, setRoleContext] = useState<UserRole>('admin');
+
+  // Team Registration State
+  const [regData, setRegData] = useState({
+    name: '',
+    email: '',
+    contact: '',
+    username: '',
+    password: ''
+  });
+
   const handleRoleSelect = (role: UserRole) => {
     if (role === 'producer') {
       setStep('mobile');
+    } else if (role === 'admin') {
+      setRoleContext('admin');
+      setStep('password');
+    } else if (role === 'team_member') {
+        setRoleContext('team_member');
+        setStep('password');
     } else {
-      login(role);
+      login(role); // Guest/Customer simple login
       navigate('/');
     }
   };
 
+  // --- Producer OTP Flow ---
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (mobile.length !== 10) {
       alert(t('invalidMobile'));
       return;
     }
-
-    // Check if the mobile number is registered
     const isRegistered = artisans.some(artisan => artisan.contact === mobile);
-    
     if (!isRegistered) {
       alert("Mobile number not registered. Please register first or use a demo number (e.g. 9876543210).");
       return;
     }
-
-    // Simulate sending OTP
     const mockOtp = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedOtp(mockOtp);
     setStep('otp');
-    // In a real app, this would trigger an SMS API
     alert(`${t('otpSentMsg')} ${mobile}: ${mockOtp}`);
   };
 
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp === generatedOtp) {
-      // Find the specific artisan to log in
       const existingArtisan = artisans.find(a => a.contact === mobile);
-      
       if (existingArtisan) {
-        // Login with the found user data
         login('producer', existingArtisan);
         navigate('/producer');
       } else {
@@ -62,6 +76,29 @@ const Login: React.FC = () => {
     } else {
       alert(t('invalidOtp'));
     }
+  };
+
+  // --- Admin/Team Password Flow ---
+  const handlePasswordLogin = (e: React.FormEvent) => {
+      e.preventDefault();
+      const result = loginWithPassword(username, password);
+      
+      if (result.success) {
+          navigate(roleContext === 'admin' ? '/admin' : '/producer'); // Team members also go to dashboard logic
+      } else {
+          alert(t(result.message || 'invalidCredentials'));
+      }
+  };
+
+  // --- Team Registration Flow ---
+  const handleTeamRegister = (e: React.FormEvent) => {
+      e.preventDefault();
+      if(regData.username && regData.password && regData.name) {
+          registerTeamMember(regData);
+          alert(t('registrationSent'));
+          setStep('password'); // Back to login
+          setRegData({ name: '', email: '', contact: '', username: '', password: '' });
+      }
   };
 
   return (
@@ -115,6 +152,20 @@ const Login: React.FC = () => {
                 </div>
                 
                 <div className="pt-4"></div>
+
+                {/* Team Member Role */}
+                <button 
+                  onClick={() => handleRoleSelect('team_member')}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-tribal-500 hover:bg-tribal-50 transition-all group text-left"
+                >
+                  <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">{t('teamMemberRole')}</h4>
+                    <p className="text-sm text-gray-500">{t('teamMemberDesc')}</p>
+                  </div>
+                </button>
 
                 <button 
                   onClick={() => handleRoleSelect('admin')}
@@ -214,6 +265,132 @@ const Login: React.FC = () => {
                  </div>
                </form>
             </div>
+          )}
+
+          {step === 'password' && (
+              <div className="animate-fade-in">
+                  <button 
+                    onClick={() => setStep('role')} 
+                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-tribal-600 mb-6"
+                  >
+                    <ArrowLeft size={16} /> {t('backToRoles')}
+                  </button>
+
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                      {roleContext === 'admin' ? t('adminRole') : t('teamMemberRole')}
+                  </h3>
+                  <p className="text-gray-500 mb-6">Enter your username and password.</p>
+
+                  <form onSubmit={handlePasswordLogin} className="space-y-4">
+                      <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('username')}</label>
+                          <div className="relative">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                              <input 
+                                  type="text" 
+                                  value={username}
+                                  onChange={e => setUsername(e.target.value)}
+                                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-tribal-500 outline-none"
+                                  placeholder="username"
+                              />
+                          </div>
+                      </div>
+                      <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('password')}</label>
+                          <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                              <input 
+                                  type="password" 
+                                  value={password}
+                                  onChange={e => setPassword(e.target.value)}
+                                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-tribal-500 outline-none"
+                                  placeholder="••••••••"
+                              />
+                          </div>
+                      </div>
+
+                      <button 
+                        type="submit"
+                        className="w-full bg-tribal-600 text-white py-3 rounded-lg font-semibold hover:bg-tribal-700 transition-colors shadow-lg shadow-tribal-500/30"
+                      >
+                        {t('login')}
+                      </button>
+
+                      {roleContext === 'team_member' && (
+                          <div className="text-center pt-2">
+                              <button type="button" onClick={() => setStep('register_team')} className="text-sm text-tribal-600 font-medium hover:underline">
+                                  {t('registerTeam')}
+                              </button>
+                          </div>
+                      )}
+                  </form>
+              </div>
+          )}
+
+          {step === 'register_team' && (
+              <div className="animate-fade-in">
+                  <button 
+                    onClick={() => setStep('password')} 
+                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-tribal-600 mb-6"
+                  >
+                    <ArrowLeft size={16} /> {t('backToLogin')}
+                  </button>
+
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{t('registerTeam')}</h3>
+                  <p className="text-gray-500 mb-6">Create a new account. Admin approval required.</p>
+
+                  <form onSubmit={handleTeamRegister} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                          <input 
+                             type="text" 
+                             placeholder={t('fullName')}
+                             required
+                             value={regData.name}
+                             onChange={e => setRegData({...regData, name: e.target.value})}
+                             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-tribal-500 outline-none"
+                          />
+                          <input 
+                             type="text" 
+                             placeholder={t('mobileNum')}
+                             required
+                             value={regData.contact}
+                             onChange={e => setRegData({...regData, contact: e.target.value})}
+                             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-tribal-500 outline-none"
+                          />
+                      </div>
+                      <input 
+                             type="email" 
+                             placeholder={t('email')}
+                             required
+                             value={regData.email}
+                             onChange={e => setRegData({...regData, email: e.target.value})}
+                             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-tribal-500 outline-none"
+                      />
+                      <input 
+                             type="text" 
+                             placeholder={t('username')}
+                             required
+                             value={regData.username}
+                             onChange={e => setRegData({...regData, username: e.target.value})}
+                             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-tribal-500 outline-none"
+                      />
+                      <input 
+                             type="password" 
+                             placeholder={t('password')}
+                             required
+                             value={regData.password}
+                             onChange={e => setRegData({...regData, password: e.target.value})}
+                             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-tribal-500 outline-none"
+                      />
+
+                      <button 
+                        type="submit"
+                        className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg shadow-green-500/30"
+                      >
+                        {t('createAccount')}
+                      </button>
+                  </form>
+              </div>
           )}
 
         </div>

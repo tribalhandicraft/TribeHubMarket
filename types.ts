@@ -1,6 +1,6 @@
 export type Language = 'en' | 'hi' | 'mr';
 
-export type UserRole = 'guest' | 'customer' | 'producer' | 'admin';
+export type UserRole = 'guest' | 'customer' | 'producer' | 'admin' | 'team_member';
 
 export interface User {
   id: string;
@@ -11,6 +11,11 @@ export interface User {
   location?: string; // Address
   contact?: string; // Contact Number
   artType?: string; // Type of Art
+  // Auth fields for Admin/Team
+  username?: string;
+  password?: string;
+  email?: string;
+  isVerified?: boolean; // For team members requiring admin approval
 }
 
 export type Category = 

@@ -7,6 +7,7 @@ interface StoreContextType {
   setLanguage: (lang: Language) => void;
   user: User | null;
   login: (role: UserRole, userData?: Partial<User>) => void;
+  loginWithPassword: (username: string, pass: string) => { success: boolean; message?: string };
   logout: () => void;
   products: Product[];
   addProduct: (product: Product) => void;
@@ -19,6 +20,9 @@ interface StoreContextType {
   cancelOrder: (orderId: string) => void;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   addReview: (productId: string, review: Review) => void;
+  registerTeamMember: (data: Partial<User>) => void;
+  verifyTeamMember: (id: string) => void;
+  teamMembers: User[];
   t: (key: string) => string;
   artisans: User[]; // Exposed artisans list
 }
@@ -32,7 +36,19 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   
-  // Initial mock artisans with contact numbers for login testing
+  // Hardcoded Admin
+  const adminUser: User = {
+      id: 'admin1',
+      name: 'Super Admin',
+      role: 'admin',
+      username: 'admin',
+      password: 'password123', // Demo password
+      isVerified: true
+  };
+
+  const [teamMembers, setTeamMembers] = useState<User[]>([]);
+
+  // Initial mock artisans
   const [artisans, setArtisans] = useState<User[]>([
     {
       id: 'a1',
@@ -72,40 +88,73 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const login = (role: UserRole, userData?: Partial<User>) => {
-    // Determine ID: use mock IDs for standard roles, or generate new ID if registration data is present
+    // Legacy/Simple login for Guest/Customer/Producer OTP flow
     const isRegistration = userData && Object.keys(userData).length > 0;
-    // If logging in with existing data (userData provided), use that ID if available
     let userId = userData?.id;
     
     if (!userId) {
-       userId = isRegistration ? `u-${Date.now()}` : (role === 'producer' ? 's1' : (role === 'admin' ? 'a1' : 'c1'));
+       userId = isRegistration ? `u-${Date.now()}` : (role === 'producer' ? 's1' : 'c1');
     }
 
     const baseUser: User = {
       id: userId,
-      name: role === 'producer' ? 'Ramesh Artisan' : (role === 'admin' ? 'Admin User' : 'Priya Sharma'),
+      name: role === 'producer' ? 'Ramesh Artisan' : 'Priya Sharma',
       role: role,
       shopName: role === 'producer' ? 'Ramesh Tribal Arts' : undefined,
     };
     
-    // Merge base mock data with any provided overrides (from registration or login lookup)
     const newUser = { ...baseUser, ...userData };
     setUser(newUser);
 
-    // If a producer registers, add them to the public artisan list
-    // Check if name is provided to assume it's a registration event vs just a login event
     if (role === 'producer' && isRegistration && !artisans.some(a => a.contact === newUser.contact)) {
       setArtisans(prev => {
-        // Prevent adding duplicate if logic runs multiple times
         if (prev.some(a => a.contact === newUser.contact)) return prev;
         return [newUser, ...prev];
       });
     }
   };
 
+  const loginWithPassword = (username: string, pass: string): { success: boolean; message?: string } => {
+    // Check Admin
+    if (username === adminUser.username && pass === adminUser.password) {
+        setUser(adminUser);
+        return { success: true };
+    }
+
+    // Check Team Members
+    const teamMember = teamMembers.find(tm => tm.username === username && tm.password === pass);
+    if (teamMember) {
+        if (!teamMember.isVerified) {
+            return { success: false, message: 'accountPending' };
+        }
+        setUser(teamMember);
+        return { success: true };
+    }
+
+    return { success: false, message: 'invalidCredentials' };
+  };
+
+  const registerTeamMember = (data: Partial<User>) => {
+      const newUser: User = {
+          id: `tm-${Date.now()}`,
+          name: data.name || 'Team Member',
+          role: 'team_member',
+          username: data.username,
+          password: data.password,
+          email: data.email,
+          contact: data.contact,
+          isVerified: false // Needs admin approval
+      };
+      setTeamMembers(prev => [...prev, newUser]);
+  };
+
+  const verifyTeamMember = (id: string) => {
+      setTeamMembers(prev => prev.map(m => m.id === id ? { ...m, isVerified: true } : m));
+  };
+
   const logout = () => {
     setUser(null);
-    setCart([]); // simple cleanup
+    setCart([]);
   };
 
   const addProduct = (product: Product) => {
@@ -168,13 +217,14 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
   return (
     <StoreContext.Provider value={{
       language, setLanguage,
-      user, login, logout,
+      user, login, loginWithPassword, logout,
       products, addProduct,
       cart, addToCart, removeFromCart, clearCart,
       orders, placeOrder, cancelOrder, updateOrderStatus,
       addReview,
+      registerTeamMember, verifyTeamMember, teamMembers,
       t,
-      artisans // Export artisans
+      artisans
     }}>
       {children}
     </StoreContext.Provider>
