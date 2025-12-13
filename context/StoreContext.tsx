@@ -11,6 +11,7 @@ interface StoreContextType {
   logout: () => void;
   products: Product[];
   addProduct: (product: Product) => void;
+  deleteProduct: (productId: string) => void;
   cart: CartItem[];
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
@@ -41,8 +42,8 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       id: 'admin1',
       name: 'Super Admin',
       role: 'admin',
-      username: 'admin',
-      password: 'password123', // Demo password
+      username: 'tribehadicrafthub.in',
+      password: 'Tribe@123', 
       isVerified: true
   };
 
@@ -161,6 +162,10 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
     setProducts((prev) => [product, ...prev]);
   };
 
+  const deleteProduct = (productId: string) => {
+    setProducts((prev) => prev.filter(p => p.id !== productId));
+  };
+
   const addToCart = (product: Product) => {
     setCart((prev) => {
       const existing = prev.find(item => item.id === product.id);
@@ -218,7 +223,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
     <StoreContext.Provider value={{
       language, setLanguage,
       user, login, loginWithPassword, logout,
-      products, addProduct,
+      products, addProduct, deleteProduct,
       cart, addToCart, removeFromCart, clearCart,
       orders, placeOrder, cancelOrder, updateOrderStatus,
       addReview,

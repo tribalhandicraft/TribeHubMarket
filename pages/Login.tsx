@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserRole } from '../types';
-import { UserCircle, Briefcase, ShieldCheck, UserPlus, Smartphone, KeyRound, ArrowLeft, ArrowRight, Users, Mail, Lock, User } from 'lucide-react';
+import { UserCircle, Briefcase, UserPlus, Smartphone, KeyRound, ArrowLeft, ArrowRight, Users, Lock, User, ShieldCheck } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login, loginWithPassword, registerTeamMember, t, artisans } = useStore();
@@ -19,7 +19,7 @@ const Login: React.FC = () => {
   // Admin/Team Password Flow State
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [roleContext, setRoleContext] = useState<UserRole>('admin');
+  const [roleContext, setRoleContext] = useState<UserRole>('team_member');
 
   // Team Registration State
   const [regData, setRegData] = useState({
@@ -33,12 +33,13 @@ const Login: React.FC = () => {
   const handleRoleSelect = (role: UserRole) => {
     if (role === 'producer') {
       setStep('mobile');
-    } else if (role === 'admin') {
-      setRoleContext('admin');
-      setStep('password');
     } else if (role === 'team_member') {
         setRoleContext('team_member');
         setStep('password');
+    } else if (role === 'admin') {
+        // Direct login for Admin (Bypassing password)
+        login('admin', { name: 'Super Admin', id: 'admin1', username: 'admin' });
+        navigate('/admin');
     } else {
       login(role); // Guest/Customer simple login
       navigate('/');
@@ -78,13 +79,13 @@ const Login: React.FC = () => {
     }
   };
 
-  // --- Admin/Team Password Flow ---
+  // --- Team Password Flow ---
   const handlePasswordLogin = (e: React.FormEvent) => {
       e.preventDefault();
       const result = loginWithPassword(username, password);
       
       if (result.success) {
-          navigate(roleContext === 'admin' ? '/admin' : '/producer'); // Team members also go to dashboard logic
+         navigate('/producer'); // Redirect team members to producer/dashboard view
       } else {
           alert(t(result.message || 'invalidCredentials'));
       }
@@ -167,11 +168,12 @@ const Login: React.FC = () => {
                   </div>
                 </button>
 
+                {/* Admin Role */}
                 <button 
                   onClick={() => handleRoleSelect('admin')}
                   className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-tribal-500 hover:bg-tribal-50 transition-all group text-left"
                 >
-                  <div className="w-12 h-12 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                     <ShieldCheck size={24} />
                   </div>
                   <div>
@@ -277,7 +279,7 @@ const Login: React.FC = () => {
                   </button>
 
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                      {roleContext === 'admin' ? t('adminRole') : t('teamMemberRole')}
+                      {t('teamMemberRole')}
                   </h3>
                   <p className="text-gray-500 mb-6">Enter your username and password.</p>
 

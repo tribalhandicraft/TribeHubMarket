@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { Package, Truck, CheckCircle, Clock, MapPin, Search, Building, Save, AlertCircle, CreditCard, Users, Phone, Palette, XCircle, UserCheck } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, MapPin, Search, Building, Save, AlertCircle, CreditCard, Users, Phone, Palette, XCircle, UserCheck, LayoutDashboard, ShoppingBag, BarChart3, TrendingUp, Trash2 } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
-  const { user, orders, updateOrderStatus, t, artisans, teamMembers, verifyTeamMember } = useStore();
-  const [activeTab, setActiveTab] = useState<'orders' | 'bank' | 'producers' | 'team'>('orders');
+  const { user, orders, updateOrderStatus, t, artisans, teamMembers, verifyTeamMember, products, deleteProduct } = useStore();
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'inventory' | 'bank' | 'producers' | 'team'>('overview');
 
   // Bank Form State
   const [bankData, setBankData] = useState({
@@ -41,7 +41,21 @@ const AdminDashboard: React.FC = () => {
     }, 1500);
   };
 
+  const handleDeleteProduct = (id: string) => {
+    if(window.confirm(t('confirmDelete'))) {
+        deleteProduct(id);
+    }
+  };
+
   const pendingTeamMembers = teamMembers.filter(m => !m.isVerified);
+  
+  // Calculate Overview Stats
+  const totalRevenue = orders
+    .filter(o => o.status !== 'cancelled')
+    .reduce((sum, o) => sum + o.total, 0);
+  const totalOrders = orders.length;
+  const activeProducts = products.length;
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -57,10 +71,22 @@ const AdminDashboard: React.FC = () => {
           {/* Navigation Tabs */}
           <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm self-start md:self-auto overflow-x-auto">
             <button 
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'bg-tribal-100 text-tribal-800 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <LayoutDashboard size={16} /> {t('overview')}
+            </button>
+            <button 
               onClick={() => setActiveTab('orders')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'orders' ? 'bg-tribal-100 text-tribal-800 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <Package size={16} /> {t('orders')}
+            </button>
+            <button 
+              onClick={() => setActiveTab('inventory')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'inventory' ? 'bg-tribal-100 text-tribal-800 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <ShoppingBag size={16} /> {t('inventory')}
             </button>
             <button 
               onClick={() => setActiveTab('producers')}
@@ -82,6 +108,85 @@ const AdminDashboard: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {activeTab === 'overview' && (
+          <div className="space-y-8 animate-fade-in">
+             {/* Stats Grid */}
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-green-100 text-green-600 rounded-lg">
+                            <TrendingUp size={24} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-500 font-medium">{t('totalRevenue')}</p>
+                            <h3 className="text-2xl font-bold text-gray-900">₹{totalRevenue.toLocaleString()}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                            <Package size={24} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-500 font-medium">{t('totalOrders')}</p>
+                            <h3 className="text-2xl font-bold text-gray-900">{totalOrders}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+                            <ShoppingBag size={24} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-500 font-medium">{t('activeProducts')}</p>
+                            <h3 className="text-2xl font-bold text-gray-900">{activeProducts}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-orange-100 text-orange-600 rounded-lg">
+                            <BarChart3 size={24} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-500 font-medium">{t('avgOrderValue')}</p>
+                            <h3 className="text-2xl font-bold text-gray-900">₹{avgOrderValue.toFixed(0)}</h3>
+                        </div>
+                    </div>
+                </div>
+             </div>
+
+             {/* Recent Orders Preview */}
+             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                   <h3 className="font-bold text-gray-900">{t('recentActivity')}</h3>
+                </div>
+                <div className="divide-y divide-gray-100">
+                   {orders.slice(0, 5).map(order => (
+                       <div key={order.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                           <div className="flex items-center gap-4">
+                               <div className="p-2 bg-gray-100 rounded-lg">
+                                   <Package size={20} className="text-gray-500"/>
+                               </div>
+                               <div>
+                                   <p className="font-semibold text-gray-800">Order #{order.id.slice(-6)}</p>
+                                   <p className="text-xs text-gray-500">{new Date(order.date).toLocaleDateString()}</p>
+                               </div>
+                           </div>
+                           <div className="text-right">
+                               <p className="font-bold text-gray-900">₹{order.total}</p>
+                               <span className={`text-xs px-2 py-0.5 rounded-full border ${getStatusColor(order.status)}`}>{order.status}</span>
+                           </div>
+                       </div>
+                   ))}
+                   {orders.length === 0 && <div className="p-8 text-center text-gray-500">No recent activity.</div>}
+                </div>
+             </div>
+          </div>
+        )}
 
         {activeTab === 'orders' && (
           <>
@@ -211,6 +316,51 @@ const AdminDashboard: React.FC = () => {
               )}
             </div>
           </>
+        )}
+
+        {activeTab === 'inventory' && (
+             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <ShoppingBag className="text-tribal-600" size={20} />
+                        {t('activeProducts')}
+                    </h2>
+                </div>
+                
+                <div className="divide-y divide-gray-100">
+                    {products.length === 0 ? (
+                        <div className="p-12 text-center text-gray-500">
+                            {t('noProducts')}
+                        </div>
+                    ) : (
+                        products.map(product => (
+                            <div key={product.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                                <div className="flex items-center gap-4">
+                                    <img src={product.images[0]} alt={product.title} className="w-16 h-16 object-cover rounded-lg border border-gray-200" />
+                                    <div>
+                                        <h3 className="font-bold text-gray-900">{product.title}</h3>
+                                        <p className="text-sm text-gray-500">Seller: {artisans.find(a => a.id === product.sellerId)?.name || 'Unknown'}</p>
+                                        <p className="text-xs text-tribal-600 font-semibold uppercase">{product.category}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <div className="text-right">
+                                        <p className="font-bold text-gray-900">₹{product.price}</p>
+                                        <p className="text-xs text-gray-500">Stock: {product.stock}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleDeleteProduct(product.id)}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        title={t('delete')}
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+             </div>
         )}
 
         {activeTab === 'producers' && (

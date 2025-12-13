@@ -197,6 +197,17 @@ export const TRANSLATIONS: Translation = {
   noPendingTeam: { en: "No pending team approvals.", hi: "कोई लंबित टीम स्वीकृति नहीं।", mr: "कोणतीही प्रलंबित टीम मंजूरी नाही." },
   approved: { en: "Approved", hi: "स्वीकृत", mr: "मंजूर" },
 
+  // New Translations for Enhanced Dashboard
+  overview: { en: "Overview", hi: "अवलोकन", mr: "आढावा" },
+  inventory: { en: "Inventory", hi: "वस्तुसूची", mr: "इन्व्हेंटरी" },
+  totalRevenue: { en: "Total Revenue", hi: "कुल राजस्व", mr: "एकूण महसूल" },
+  totalOrders: { en: "Total Orders", hi: "कुल ऑर्डर", mr: "एकूण ऑर्डर्स" },
+  activeProducts: { en: "Active Products", hi: "सक्रिय उत्पाद", mr: "सक्रिय उत्पादने" },
+  avgOrderValue: { en: "Avg. Order Value", hi: "औसत ऑर्डर मूल्य", mr: "सरासरी ऑर्डर मूल्य" },
+  recentActivity: { en: "Recent Activity", hi: "हाल की गतिविधि", mr: "अलीकडील क्रियाकलाप" },
+  delete: { en: "Delete", hi: "हटाएं", mr: "हटवा" },
+  confirmDelete: { en: "Are you sure you want to delete this product?", hi: "क्या आप वाकई इस उत्पाद को हटाना चाहते हैं?", mr: "तुम्हाला खात्री आहे की तुम्ही हे उत्पादन हटवू इच्छिता?" },
+
   // Shop Page
   allCategories: { en: "All Categories", hi: "सभी श्रेणियाँ", mr: "सर्व श्रेण्या" },
   noProducts: { en: "No products found", hi: "कोई उत्पाद नहीं मिला", mr: "कोणतेही उत्पादने सापडली नाहीत" },
