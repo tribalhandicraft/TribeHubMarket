@@ -81,7 +81,7 @@ const Login: React.FC = () => {
       const result = loginWithPassword(username, password);
       
       if (result.success) {
-         if (activeRole === 'admin' || username.includes('admin')) {
+         if (activeRole === 'admin' || activeRole === 'team_member') {
             navigate('/admin');
          } else {
             navigate('/producer');

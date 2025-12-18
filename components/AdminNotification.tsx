@@ -8,12 +8,14 @@ const AdminNotification: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [lastViewedCount, setLastViewedCount] = useState(0);
 
+  const canHandleOrders = user?.role === 'admin' || user?.role === 'team_member';
+
   // Filter for pending orders
   const pendingOrders = orders.filter(o => o.status === 'pending');
   const latestOrder = pendingOrders[0]; // Assuming newest first
 
   useEffect(() => {
-    if (user?.role === 'admin') {
+    if (canHandleOrders) {
       // Show notification if we have pending orders and the count has increased (new order arrived)
       // or if we have pending orders and haven't dismissed the initial check
       if (pendingOrders.length > 0 && pendingOrders.length > lastViewedCount) {
@@ -23,9 +25,9 @@ const AdminNotification: React.FC = () => {
     } else {
       setIsVisible(false);
     }
-  }, [orders, user, lastViewedCount, pendingOrders.length]);
+  }, [orders, user, lastViewedCount, pendingOrders.length, canHandleOrders]);
 
-  if (!isVisible || !user || user.role !== 'admin' || pendingOrders.length === 0) {
+  if (!isVisible || !user || !canHandleOrders || pendingOrders.length === 0) {
     return null;
   }
 

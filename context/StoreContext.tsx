@@ -23,6 +23,8 @@ interface StoreContextType {
   addReview: (productId: string, review: Review) => void;
   registerTeamMember: (data: Partial<User>) => void;
   verifyTeamMember: (id: string) => void;
+  approveArtisan: (id: string) => void;
+  deleteArtisan: (id: string) => void;
   teamMembers: User[];
   t: (key: string) => string;
   artisans: User[]; // Exposed artisans list
@@ -59,7 +61,8 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       location: 'Bastar, Chhattisgarh',
       artType: 'Dhokra Art',
       contact: '9876543210',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+      isVerified: true
     },
     {
       id: 'a2',
@@ -69,7 +72,8 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       location: 'Madhubani, Bihar',
       artType: 'Madhubani Painting',
       contact: '9876543211',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop'
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+      isVerified: true
     },
     {
       id: 'a3',
@@ -79,7 +83,8 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       location: 'Guwahati, Assam',
       artType: 'Bamboo Handicrafts',
       contact: '9876543212',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+      isVerified: true
     }
   ]);
 
@@ -89,7 +94,6 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const login = (role: UserRole, userData?: Partial<User>) => {
-    // Legacy/Simple login for Guest/Customer/Producer OTP flow
     const isRegistration = userData && Object.keys(userData).length > 0;
     let userId = userData?.id;
     
@@ -104,7 +108,12 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       shopName: role === 'producer' ? 'Ramesh Tribal Arts' : undefined,
     };
     
-    const newUser = { ...baseUser, ...userData };
+    // New Producers are NOT verified by default on registration
+    const newUser = { 
+      ...baseUser, 
+      ...userData, 
+      isVerified: isRegistration && role === 'producer' ? false : (userData?.isVerified ?? true) 
+    };
     
     // Safety check: ensure role is never forced to admin from this path
     if (newUser.role === 'admin' && newUser.username !== adminUser.username) {
@@ -122,13 +131,11 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const loginWithPassword = (username: string, pass: string): { success: boolean; message?: string } => {
-    // Check Single Host (Admin)
     if (username === adminUser.username && pass === adminUser.password) {
         setUser(adminUser);
         return { success: true };
     }
 
-    // Check Team Members
     const teamMember = teamMembers.find(tm => tm.username === username && tm.password === pass);
     if (teamMember) {
         if (!teamMember.isVerified) {
@@ -145,18 +152,27 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       const newUser: User = {
           id: `tm-${Date.now()}`,
           name: data.name || 'Team Member',
-          role: 'team_member', // STRICT: Cannot register as admin
+          role: 'team_member',
           username: data.username,
           password: data.password,
           email: data.email,
           contact: data.contact,
-          isVerified: false // Needs host approval
+          isVerified: false 
       };
       setTeamMembers(prev => [...prev, newUser]);
   };
 
   const verifyTeamMember = (id: string) => {
       setTeamMembers(prev => prev.map(m => m.id === id ? { ...m, isVerified: true } : m));
+  };
+
+  const approveArtisan = (id: string) => {
+    setArtisans(prev => prev.map(a => a.id === id ? { ...a, isVerified: true } : a));
+  };
+
+  const deleteArtisan = (id: string) => {
+    setArtisans(prev => prev.filter(a => a.id !== id));
+    setProducts(prev => prev.filter(p => p.sellerId !== id)); // Remove their products too
   };
 
   const logout = () => {
@@ -233,7 +249,8 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       cart, addToCart, removeFromCart, clearCart,
       orders, placeOrder, cancelOrder, updateOrderStatus,
       addReview,
-      registerTeamMember, verifyTeamMember, teamMembers,
+      registerTeamMember, verifyTeamMember, approveArtisan, deleteArtisan,
+      teamMembers,
       t,
       artisans
     }}>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, User as UserIcon, LogOut, Package } from 'lucide-react';
+import { ShoppingCart, Menu, X, User as UserIcon, LogOut, Package, ShieldCheck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Language } from '../types';
 
@@ -36,8 +36,11 @@ const Navbar: React.FC = () => {
             {user?.role === 'producer' && (
                <Link to="/producer" className={isActive('/producer')}>{t('dashboard')}</Link>
             )}
-            {user?.role === 'admin' && (
-               <Link to="/admin" className={isActive('/admin')}>{t('admin')}</Link>
+            {(user?.role === 'admin' || user?.role === 'team_member') && (
+               <Link to="/admin" className={`flex items-center gap-1.5 ${isActive('/admin')}`}>
+                 <ShieldCheck size={18} />
+                 <span>{user.role === 'admin' ? t('admin') : 'Management'}</span>
+               </Link>
             )}
           </div>
 
@@ -105,6 +108,9 @@ const Navbar: React.FC = () => {
           )}
           {user?.role === 'producer' && (
              <Link to="/producer" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-600">{t('dashboard')}</Link>
+          )}
+          {(user?.role === 'admin' || user?.role === 'team_member') && (
+             <Link to="/admin" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-600">{user.role === 'admin' ? t('admin') : 'Management'}</Link>
           )}
         </div>
       )}

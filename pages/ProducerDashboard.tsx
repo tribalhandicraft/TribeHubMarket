@@ -3,12 +3,16 @@ import { useStore } from '../context/StoreContext';
 import { CATEGORIES } from '../constants';
 import { Category, Product } from '../types';
 import { generateProductDescription } from '../services/geminiService';
-import { Sparkles, Upload, Package, DollarSign, Type, X } from 'lucide-react';
+import { Sparkles, Upload, Package, DollarSign, Type, X, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 const ProducerDashboard: React.FC = () => {
-  const { user, addProduct, products, t, language } = useStore();
+  const { user, addProduct, products, t, language, artisans } = useStore();
   const [isGenerating, setIsGenerating] = useState(false);
   
+  // Refresh current user's verified status from global artisans list if needed
+  const currentUserData = artisans.find(a => a.id === user?.id) || user;
+  const isVerified = currentUserData?.isVerified;
+
   const [formData, setFormData] = useState({
     title: '',
     price: '',
@@ -54,6 +58,10 @@ const ProducerDashboard: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isVerified) {
+      alert("Verification Pending: You can only publish products after the Host approves your account.");
+      return;
+    }
     if (!formData.title || !formData.price || formData.images.length === 0) {
       alert("Please fill in required fields and upload at least one image.");
       return;
@@ -72,7 +80,6 @@ const ProducerDashboard: React.FC = () => {
     };
 
     addProduct(newProduct);
-    // Reset form
     setFormData({
       title: '',
       price: '',
@@ -90,11 +97,27 @@ const ProducerDashboard: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('dashboard')}</h1>
         <p className="text-gray-600 mb-8">{t('welcomeBackUser')}, {user.name} ({user.shopName})</p>
 
+        {/* Verification Status Banner */}
+        {!isVerified && (
+          <div className="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-r-xl shadow-sm mb-8 flex flex-col md:flex-row items-center gap-6">
+             <div className="bg-orange-100 p-3 rounded-full text-orange-600">
+                <ShieldAlert size={32} />
+             </div>
+             <div className="flex-1 text-center md:text-left">
+                <h3 className="text-lg font-bold text-orange-800 mb-1">Verification Pending</h3>
+                <p className="text-orange-700 text-sm">The platform Host is currently reviewing your application. You can fill out product details now, but publishing is restricted until your account is approved.</p>
+             </div>
+             <div className="text-xs font-black uppercase tracking-widest text-orange-400 bg-white px-3 py-1 rounded-full border border-orange-200">
+               Status: Under Review
+             </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Add Product Form */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-md border border-tribal-100 p-6 sticky top-24">
+            <div className={`bg-white rounded-xl shadow-md border border-tribal-100 p-6 sticky top-24 ${!isVerified && 'opacity-70 grayscale-[0.5]'}`}>
               <h2 className="text-xl font-bold text-tribal-800 mb-6 flex items-center gap-2">
                 <Package className="text-tribal-500" />
                 {t('addProduct')}
@@ -190,17 +213,12 @@ const ProducerDashboard: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Image Previews */}
                   {formData.images.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 mt-4">
                           {formData.images.map((img, idx) => (
                               <div key={idx} className="relative aspect-square">
                                   <img src={img} alt="Preview" className="w-full h-full object-cover rounded-md" />
-                                  <button
-                                      type="button"
-                                      onClick={() => removeImage(idx)}
-                                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
-                                  >
+                                  <button type="button" onClick={() => removeImage(idx)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600">
                                       <X size={12} />
                                   </button>
                               </div>
@@ -211,8 +229,9 @@ const ProducerDashboard: React.FC = () => {
 
                 <button 
                   type="submit" 
-                  className="w-full bg-tribal-600 text-white py-3 rounded-lg font-semibold hover:bg-tribal-700 transition-colors shadow-lg shadow-tribal-500/30"
+                  className={`w-full py-3 rounded-lg font-semibold transition-all shadow-lg flex items-center justify-center gap-2 ${isVerified ? 'bg-tribal-600 text-white hover:bg-tribal-700 shadow-tribal-500/30' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                 >
+                  {!isVerified && <Lock size={18} />}
                   {t('publishProd')}
                 </button>
               </form>
