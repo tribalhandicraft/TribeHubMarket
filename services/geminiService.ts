@@ -1,25 +1,15 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { Language } from "../types";
 
-// Helper to get safe API key or throw descriptive error for demo
-const getApiKey = () => {
-  const key = process.env.API_KEY;
-  if (!key) {
-    console.error("API Key missing");
-    return "";
-  }
-  return key;
-};
-
+// Fix: Updated Gemini API service to strictly follow @google/genai guidelines
 export const generateProductDescription = async (
   title: string, 
   category: string, 
   language: Language
 ): Promise<string> => {
-  const apiKey = getApiKey();
-  if (!apiKey) return "AI service unavailable (Missing API Key).";
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Use process.env.API_KEY directly as per guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const langMap = {
     en: "English",
@@ -44,9 +34,10 @@ export const generateProductDescription = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview', // Correct model for basic text tasks as per guidelines
       contents: prompt,
     });
+    // Accessing text property directly (not calling as a method) as per guidelines
     return response.text?.trim() || "Description could not be generated.";
   } catch (error) {
     console.error("Gemini Error:", error);

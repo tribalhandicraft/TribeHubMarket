@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { CATEGORIES } from '../constants';
 import { Category, Product } from '../types';
 import { generateProductDescription } from '../services/geminiService';
-import { Sparkles, Upload, Package, DollarSign, Type, X, AlertTriangle, ShieldAlert } from 'lucide-react';
+// Fix: Added missing Lock icon to the imports from lucide-react
+import { Sparkles, Upload, Package, DollarSign, Type, X, AlertTriangle, ShieldAlert, Lock } from 'lucide-react';
 
 const ProducerDashboard: React.FC = () => {
   const { user, addProduct, products, t, language, artisans } = useStore();

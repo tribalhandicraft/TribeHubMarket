@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserRole } from '../types';
-import { UserCircle, Briefcase, UserPlus, Smartphone, KeyRound, ArrowLeft, ArrowRight, Users, Lock, User, ShieldCheck, ShoppingBag, ShieldAlert } from 'lucide-react';
+import { UserCircle, Briefcase, UserPlus, Smartphone, KeyRound, ArrowLeft, ArrowRight, Users, Lock, User, ShieldCheck, ShoppingBag, ShieldAlert, Mail, CheckCircle, MapPin } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login, loginWithPassword, registerTeamMember, t, artisans } = useStore();
+  const { login, loginWithPassword, registerTeamMember, requestPasswordReset, t, artisans } = useStore();
   const navigate = useNavigate();
 
   // State for Flow
-  const [step, setStep] = useState<'selection' | 'mobile' | 'otp' | 'password' | 'register_team'>('selection');
+  const [step, setStep] = useState<'selection' | 'mobile' | 'otp' | 'password' | 'register_team' | 'forgot_password' | 'reset_success'>('selection');
   const [activeRole, setActiveRole] = useState<UserRole | null>(null);
   
   // Producer OTP Flow State
@@ -21,11 +21,15 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  // Password Reset State
+  const [resetEmail, setResetEmail] = useState('');
+
   // Team Registration State
   const [regData, setRegData] = useState({
     name: '',
     email: '',
     contact: '',
+    address: '', // Added address
     username: '',
     password: ''
   });
@@ -91,20 +95,38 @@ const Login: React.FC = () => {
       }
   };
 
+  // --- Reset Password Flow ---
+  const handleResetRequest = (e: React.FormEvent) => {
+      e.preventDefault();
+      const result = requestPasswordReset(resetEmail);
+      if (result.success) {
+          setStep('reset_success');
+      } else {
+          alert(t(result.message));
+      }
+  };
+
   // --- Team Registration Flow ---
   const handleTeamRegister = (e: React.FormEvent) => {
       e.preventDefault();
       if(regData.username && regData.password && regData.name) {
-          registerTeamMember(regData);
+          registerTeamMember({
+              ...regData,
+              location: regData.address // Map address to location field
+          });
           alert(t('registrationSent'));
           setStep('password');
-          setRegData({ name: '', email: '', contact: '', username: '', password: '' });
+          setRegData({ name: '', email: '', contact: '', address: '', username: '', password: '' });
       }
   };
 
   const backToSelection = () => {
       setStep('selection');
       setActiveRole(null);
+  };
+
+  const backToPasswordLogin = () => {
+      setStep('password');
   };
 
   return (
@@ -226,7 +248,6 @@ const Login: React.FC = () => {
 
             {step === 'selection' ? (
                 <div className="space-y-4">
-                    {/* Team Member Role (Registration Available) */}
                     <button 
                         onClick={() => handleRoleSelect('team_member')}
                         className="w-full flex items-center gap-4 p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:bg-white/10 hover:border-green-500 transition-all group text-left backdrop-blur-sm"
@@ -240,7 +261,6 @@ const Login: React.FC = () => {
                         </div>
                     </button>
 
-                    {/* Admin Role (Restricted Host Only) */}
                     <div className="relative">
                         <button 
                             onClick={() => handleRoleSelect('admin')}
@@ -258,9 +278,17 @@ const Login: React.FC = () => {
                 </div>
             ) : ((activeRole === 'team_member' || activeRole === 'admin') && (
                 <div className="bg-white/5 p-8 rounded-3xl shadow-2xl border border-white/10 backdrop-blur-md animate-fade-in">
-                    <button onClick={backToSelection} className="flex items-center gap-1 text-xs font-bold text-tribal-300 hover:text-white mb-6 uppercase tracking-widest">
-                        <ArrowLeft size={14} /> Back
-                    </button>
+                    
+                    {/* Header Back Buttons */}
+                    {['password', 'register_team', 'forgot_password'].includes(step) ? (
+                        <button onClick={backToSelection} className="flex items-center gap-1 text-xs font-bold text-tribal-300 hover:text-white mb-6 uppercase tracking-widest">
+                            <ArrowLeft size={14} /> Back
+                        </button>
+                    ) : step === 'reset_success' ? null : (
+                        <button onClick={backToPasswordLogin} className="flex items-center gap-1 text-xs font-bold text-tribal-300 hover:text-white mb-6 uppercase tracking-widest">
+                            <ArrowLeft size={14} /> Back to Login
+                        </button>
+                    )}
 
                     {step === 'password' ? (
                         <form onSubmit={handlePasswordLogin} className="space-y-6">
@@ -283,7 +311,16 @@ const Login: React.FC = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-tribal-300 uppercase tracking-widest mb-2">{t('password')}</label>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="block text-xs font-bold text-tribal-300 uppercase tracking-widest">{t('password')}</label>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setStep('forgot_password')}
+                                            className="text-[10px] text-tribal-400 hover:text-white uppercase tracking-widest font-bold"
+                                        >
+                                            {t('forgotPassword')}
+                                        </button>
+                                    </div>
                                     <div className="relative">
                                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={20} />
                                         <input 
@@ -300,68 +337,148 @@ const Login: React.FC = () => {
                                 {activeRole === 'admin' ? 'Authorize Access' : t('login')}
                             </button>
                             
-                            {/* ONLY Team Member can see registration */}
                             {activeRole === 'team_member' && (
                                 <button type="button" onClick={() => setStep('register_team')} className="w-full text-xs font-bold text-tribal-300 hover:text-white uppercase tracking-widest mt-2">
                                     {t('registerTeam')}
                                 </button>
                             )}
-                            
-                            {activeRole === 'admin' && (
-                                <div className="text-center mt-4">
-                                    <p className="text-[10px] text-red-400/60 uppercase tracking-widest font-bold">Registration disabled for Host account</p>
-                                </div>
-                            )}
                         </form>
+                    ) : step === 'forgot_password' ? (
+                        <form onSubmit={handleResetRequest} className="space-y-6 animate-fade-in">
+                            <div className="text-center mb-6">
+                                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Mail className="text-tribal-400" size={24} />
+                                </div>
+                                <h3 className="text-xl font-bold">{t('forgotPassword')}</h3>
+                                <p className="text-xs text-tribal-400 mt-2">No worries! It happens. Enter your registered email to receive a reset link.</p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-tribal-300 uppercase tracking-widest mb-2">{t('email')}</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={20} />
+                                    <input 
+                                        type="email" 
+                                        required
+                                        value={resetEmail}
+                                        onChange={e => setResetEmail(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/10 rounded-xl focus:ring-2 focus:ring-tribal-400 outline-none"
+                                        placeholder="your@email.com"
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full py-4 bg-white text-tribal-900 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-xl flex items-center justify-center gap-2">
+                                {t('sendResetLink')} <ArrowRight size={18} />
+                            </button>
+                        </form>
+                    ) : step === 'reset_success' ? (
+                        <div className="text-center py-8 animate-fade-in">
+                            <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle size={32} />
+                            </div>
+                            <h3 className="text-2xl font-bold mb-4">{t('resetEmailSent')}</h3>
+                            <p className="text-sm text-tribal-300 mb-8 leading-relaxed">Please check your inbox at <span className="text-white font-mono">{resetEmail}</span> for instructions to reset your password.</p>
+                            <button onClick={backToPasswordLogin} className="w-full py-4 bg-white/10 border border-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+                                {t('backToLogin')}
+                            </button>
+                        </div>
                     ) : (
                         /* Registration Form - ONLY for Team Member */
-                        <form onSubmit={handleTeamRegister} className="space-y-4 animate-fade-in">
+                        <form onSubmit={handleTeamRegister} className="space-y-4 animate-fade-in max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
                             <h3 className="text-xl font-bold mb-4">{t('registerTeam')}</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <input 
-                                    type="text" 
-                                    placeholder={t('fullName')}
-                                    required
-                                    value={regData.name}
-                                    onChange={e => setRegData({...regData, name: e.target.value})}
-                                    className="w-full px-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm"
-                                />
-                                <input 
-                                    type="text" 
-                                    placeholder={t('mobileNum')}
-                                    required
-                                    value={regData.contact}
-                                    onChange={e => setRegData({...regData, contact: e.target.value})}
-                                    className="w-full px-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm"
-                                />
+                            
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-tribal-300 uppercase tracking-widest mb-1">Full Name</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={14} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Jane Doe"
+                                            required
+                                            value={regData.name}
+                                            onChange={e => setRegData({...regData, name: e.target.value})}
+                                            className="w-full pl-9 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm focus:ring-1 focus:ring-tribal-400"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-tribal-300 uppercase tracking-widest mb-1">Email ID</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={14} />
+                                            <input 
+                                                type="email" 
+                                                placeholder="jane@work.com"
+                                                required
+                                                value={regData.email}
+                                                onChange={e => setRegData({...regData, email: e.target.value})}
+                                                className="w-full pl-9 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm focus:ring-1 focus:ring-tribal-400"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-tribal-300 uppercase tracking-widest mb-1">Contact</label>
+                                        <div className="relative">
+                                            <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={14} />
+                                            <input 
+                                                type="text" 
+                                                placeholder="9876543210"
+                                                required
+                                                value={regData.contact}
+                                                onChange={e => setRegData({...regData, contact: e.target.value})}
+                                                className="w-full pl-9 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm focus:ring-1 focus:ring-tribal-400"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold text-tribal-300 uppercase tracking-widest mb-1">Home Address</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 text-white/30" size={14} />
+                                        <textarea 
+                                            placeholder="Full permanent address"
+                                            required
+                                            value={regData.address}
+                                            onChange={e => setRegData({...regData, address: e.target.value})}
+                                            rows={2}
+                                            className="w-full pl-9 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm focus:ring-1 focus:ring-tribal-400 resize-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-tribal-300 uppercase tracking-widest mb-1">Username</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="jane_staff"
+                                            required
+                                            value={regData.username}
+                                            onChange={e => setRegData({...regData, username: e.target.value})}
+                                            className="w-full px-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm focus:ring-1 focus:ring-tribal-400"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-tribal-300 uppercase tracking-widest mb-1">Password</label>
+                                        <input 
+                                            type="password" 
+                                            placeholder="••••••••"
+                                            required
+                                            value={regData.password}
+                                            onChange={e => setRegData({...regData, password: e.target.value})}
+                                            className="w-full px-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm focus:ring-1 focus:ring-tribal-400"
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <input 
-                                type="email" 
-                                placeholder={t('email')}
-                                required
-                                value={regData.email}
-                                onChange={e => setRegData({...regData, email: e.target.value})}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm"
-                            />
-                            <input 
-                                type="text" 
-                                placeholder={t('username')}
-                                required
-                                value={regData.username}
-                                onChange={e => setRegData({...regData, username: e.target.value})}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm"
-                            />
-                            <input 
-                                type="password" 
-                                placeholder={t('password')}
-                                required
-                                value={regData.password}
-                                onChange={e => setRegData({...regData, password: e.target.value})}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/10 rounded-lg outline-none text-sm"
-                            />
-                            <button type="submit" className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-900/40">
+
+                            <button type="submit" className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-900/40 mt-4">
                                 {t('createAccount')}
                             </button>
+                            <p className="text-[10px] text-center text-tribal-400 mt-2 italic">Submission requires Host approval before access is granted.</p>
                         </form>
                     )}
                 </div>

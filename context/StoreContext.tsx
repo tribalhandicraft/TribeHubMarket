@@ -25,6 +25,7 @@ interface StoreContextType {
   verifyTeamMember: (id: string) => void;
   approveArtisan: (id: string) => void;
   deleteArtisan: (id: string) => void;
+  requestPasswordReset: (email: string) => { success: boolean; message: string };
   teamMembers: User[];
   t: (key: string) => string;
   artisans: User[]; // Exposed artisans list
@@ -46,6 +47,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       role: 'admin',
       username: 'TRIBALARTHUB',
       password: 'Tribal@123', 
+      email: 'admin@tribalheritage.com', // Added email for reset functionality
       isVerified: true
   };
 
@@ -146,6 +148,21 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
     }
 
     return { success: false, message: 'invalidCredentials' };
+  };
+
+  const requestPasswordReset = (email: string): { success: boolean; message: string } => {
+      // Check Admin
+      if (email.toLowerCase() === adminUser.email?.toLowerCase()) {
+          return { success: true, message: 'resetEmailSent' };
+      }
+      
+      // Check Team Members
+      const member = teamMembers.find(m => m.email?.toLowerCase() === email.toLowerCase());
+      if (member) {
+          return { success: true, message: 'resetEmailSent' };
+      }
+
+      return { success: false, message: 'emailNotFound' };
   };
 
   const registerTeamMember = (data: Partial<User>) => {
@@ -250,6 +267,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       orders, placeOrder, cancelOrder, updateOrderStatus,
       addReview,
       registerTeamMember, verifyTeamMember, approveArtisan, deleteArtisan,
+      requestPasswordReset,
       teamMembers,
       t,
       artisans

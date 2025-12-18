@@ -43,7 +43,7 @@ export const TRANSLATIONS: Translation = {
   
   // Home
   heroTitle: { en: 'Authentic Tribal Treasures', hi: 'प्रामाणिक आदिवासी खजाने', mr: 'अस्सल आदिवासी ठेवा' },
-  heroSubtitle: { en: 'Direct from artisans to your home.', hi: 'कारीगरों से सीधे आपके घर तक।', mr: 'कारागीरांकडून थेट तुमच्या घरी.' },
+  heroSubtitle: { en: 'Direct from artisans to your home.', hi: 'कारीगरों से सीधे आपके घर तक।', mr: 'कारीगरों से सीधे आपके घर तक।' },
   discoverSpirit: { en: 'Discover the Spirit of India', hi: 'भारत की आत्मा को खोजें', mr: 'भारताचा आत्मा शोधा' },
   learnMore: { en: 'Learn More', hi: 'और जानें', mr: 'अधिक जाणून घ्या' },
   exploreCategories: { en: 'Explore Categories', hi: 'श्रेणियाँ खोजें', mr: 'श्रेण्या एक्सप्लोर करा' },
@@ -62,26 +62,6 @@ export const TRANSLATIONS: Translation = {
   productsCount: { en: 'Authentic Products', hi: 'असली उत्पाद', mr: 'अस्सल उत्पादने' },
   testimonialQuote: { en: "This platform has given my art a new life and my family a steady income.", hi: "इस मंच ने मेरी कला को नया जीवन और मेरे परिवार को स्थिर आय दी है।", mr: "या प्लॅटफॉर्मने माझ्या कलेला नवीन जीवन आणि माझ्या कुटुंबाला स्थिर उत्पन्न दिले आहे." },
   testimonialAuthor: { en: "- Lakshmi Devi, Madhubani Artist", hi: "- लक्ष्मी देवी, मधुबनी कलाकार", mr: "- लक्ष्मी देवी, मधुबनी कलाकार" },
-
-  // About Page
-  aboutUs: { en: 'About Us', hi: 'हमारे बारे में', mr: 'आमच्याबद्दल' },
-  aboutHeaderSub: { en: 'Connecting the world with the soulful heritage of indigenous artisans.', hi: 'दुनिया को स्वदेशी कारीगरों की आत्मीय विरासत से जोड़ना।', mr: 'जगाला स्थानिक कारागीरांच्या आत्मिक वारशाशी जोडणे.' },
-  founderMessage: { en: 'Founder\'s Message', hi: 'संस्थापक का संदेश', mr: 'संस्थापकाचा संदेश' },
-  founderBio1: { en: "TribalHeritage was born from a simple journey to the heart of Bastar, where I witnessed art that breathed history and culture.", hi: "ट्राइबल हेरिटेज का जन्म बस्तर के दिल की एक साधारण यात्रा से हुआ, जहां मैंने इतिहास और संस्कृति से सांस लेती कला देखी।", mr: "ट्राइबल हेरिटेजचा जन्म बस्तरच्या हृदयापर्यंतच्या एका साध्या प्रवासातून झाला, जिथे मी इतिहास आणि संस्कृतीचा श्वास घेणारी कला पाहिली." },
-  founderBio2: { en: "Our mission is not just to sell products, but to tell stories. Every artifact on this platform carries the soul of its creator.", hi: "हमारा मिशन सिर्फ उत्पाद बेचना नहीं, बल्कि कहानियां सुनाना है। इस मंच पर हर कलाकृति अपने निर्माता की आत्मा को वहन करती है।", mr: "आमचे ध्येय केवळ उत्पादने विकणे नाही, तर कथा सांगणे आहे. या प्लॅटफॉर्मवरील प्रत्येक कलाकृती तिच्या निर्मात्याचा आत्मा वाहून नेते." },
-  founderRole: { en: "Founder & CEO", hi: "संस्थापक और सीईओ", mr: "संस्थापक आणि सीईओ" },
-  ourTeam: { en: 'Our Team', hi: 'हमारी टीम', mr: 'आमची टीम' },
-  roleOperations: { en: "Head of Operations", hi: "संचालन प्रमुख", mr: "ऑपरेशन्स प्रमुख" },
-  roleTech: { en: "Tech Lead", hi: "तकनीकी प्रमुख", mr: "टेक लीड" },
-  roleCommunity: { en: "Community Manager", hi: "समुदाय प्रबंधक", mr: "कम्युनिटी मॅनेजर" },
-  roleMarketing: { en: "Head of Marketing", hi: "विपणन प्रमुख", mr: "विपणन प्रमुख" },
-  contactUs: { en: 'Contact Us', hi: 'संपर्क करें', mr: 'संपर्क साधा' },
-  emailLabel: { en: "Email Us", hi: "हमें ईमेल करें", mr: "आम्हाला ईमेल करा" },
-  callLabel: { en: "Call Us", hi: "हमें कॉल करें", mr: "आम्हाला कॉल करा" },
-  visitLabel: { en: "Visit Us", hi: "हमसे मिलें", mr: "आम्हाला भेट द्या" },
-  followUs: { en: 'Follow Us', hi: 'हमे फॉलो करें', mr: 'आम्हाला फॉलो करा' },
-  socialText: { en: "Join our community on social media for daily updates on new artisans and products.", hi: "नए कारीगरों और उत्पादों पर दैनिक अपडेट के लिए सोशल मीडिया पर हमारे समुदाय से जुड़ें।", mr: "नवीन कारागीर आणि उत्पादनांच्या दैनंदिन अपडेट्ससाठी सोशल मीडियावर आमच्या समुदायात सामील व्हा." },
-  copyright: { en: "© 2024 TribalHeritage Market. All rights reserved.", hi: "© 2024 ट्राइबल हेरिटेज मार्केट। सर्वाधिकार सुरक्षित।", mr: "© 2024 ट्राइबल हेरिटेज मार्केट. सर्व हक्क राखीव." },
 
   // Cart & Order
   secureCheckout: { en: "Secure Checkout", hi: "सुरक्षित चेकआउट", mr: "सुरक्षित चेकआउट" },
@@ -153,6 +133,11 @@ export const TRANSLATIONS: Translation = {
   registrationSent: { en: "Registration details sent to Admin for approval.", hi: "पंजीकरण विवरण अनुमोदन के लिए एडमिन को भेजे गए।", mr: "नोंदणी तपशील मंजूरीसाठी प्रशासकाकडे पाठवले." },
   createAccount: { en: "Create Account", hi: "खाता बनाएं", mr: "खाते तयार करा" },
   backToLogin: { en: "Back to Login", hi: "लॉगिन पर वापस जाएं", mr: "लॉगिनवर परत जा" },
+  forgotPassword: { en: "Forgot Password?", hi: "पासवर्ड भूल गए?", mr: "पासवर्ड विसरलात?" },
+  resetEmailSent: { en: "A reset link has been sent to your registered email.", hi: "आपके पंजीकृत ईमेल पर एक रीसेट लिंक भेजा गया है।", mr: "तुमच्या नोंदणीकृत ईमेलवर रीसेट लिंक पाठवली गेली आहे." },
+  enterRegisteredEmail: { en: "Enter Registered Email", hi: "पंजीकृत ईमेल दर्ज करें", mr: "नोंदणीकृत ईमेल प्रविष्ट करा" },
+  emailNotFound: { en: "No account found with this email.", hi: "इस ईमेल के साथ कोई खाता नहीं मिला।", mr: "या ईमेलसह कोणतेही खाते सापडले नाही." },
+  sendResetLink: { en: "Send Reset Link", hi: "रीसेट लिंक भेजें", mr: "रीसेट लिंक पाठवा" },
 
   // Producer Register
   artisanRegTitle: { en: "Artisan Registration", hi: "कारीगर पंजीकरण", mr: "कारागीर नोंदणी" },
