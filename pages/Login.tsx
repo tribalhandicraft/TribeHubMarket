@@ -11,6 +11,10 @@ const Login: React.FC = () => {
   // State for Flow
   const [step, setStep] = useState<'role' | 'mobile' | 'otp' | 'password' | 'register_team'>('role');
   
+  // Secret access state
+  const [adminModeClicks, setAdminModeClicks] = useState(0);
+  const [showAdminOptions, setShowAdminOptions] = useState(false);
+  
   // Producer OTP Flow State
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
@@ -30,6 +34,14 @@ const Login: React.FC = () => {
     password: ''
   });
 
+  const handleSecretTrigger = () => {
+      const newCount = adminModeClicks + 1;
+      setAdminModeClicks(newCount);
+      if (newCount >= 5) {
+          setShowAdminOptions(true);
+      }
+  };
+
   const handleRoleSelect = (role: UserRole) => {
     if (role === 'producer') {
       setStep('mobile');
@@ -37,7 +49,7 @@ const Login: React.FC = () => {
         setRoleContext('team_member');
         setStep('password');
     } else if (role === 'admin') {
-        // Direct login for Admin (Bypassing password)
+        // Direct login for Admin (Bypassing password for demo)
         login('admin', { name: 'Super Admin', id: 'admin1', username: 'admin' });
         navigate('/admin');
     } else {
@@ -109,8 +121,16 @@ const Login: React.FC = () => {
         {/* Decorative Side */}
         <div className="md:w-2/5 bg-tribal-600 p-8 flex flex-col justify-center text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.toptal.com/designers/subtlepatterns/uploads/woven.png')]"></div>
-          <h2 className="text-3xl font-bold mb-4 relative z-10">{t('welcomeBack')}</h2>
+          <h2 
+            onClick={handleSecretTrigger}
+            className="text-3xl font-bold mb-4 relative z-10 cursor-default select-none active:opacity-70 transition-opacity"
+          >
+            {t('welcomeBack')}
+          </h2>
           <p className="opacity-90 relative z-10">{t('signInSub')}</p>
+          {showAdminOptions && !step.includes('role') && (
+              <div className="absolute bottom-4 left-4 text-[10px] uppercase tracking-widest text-white/40">Secret Admin Mode Active</div>
+          )}
         </div>
 
         {/* Content Side */}
@@ -152,35 +172,39 @@ const Login: React.FC = () => {
                     </Link>
                 </div>
                 
-                <div className="pt-4"></div>
+                {showAdminOptions && (
+                  <div className="animate-fade-in space-y-4 pt-4 mt-4 border-t border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Administrative Access</p>
+                    
+                    {/* Team Member Role */}
+                    <button 
+                      onClick={() => handleRoleSelect('team_member')}
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all group text-left"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <Users size={24} />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">{t('teamMemberRole')}</h4>
+                        <p className="text-sm text-gray-500">{t('teamMemberDesc')}</p>
+                      </div>
+                    </button>
 
-                {/* Team Member Role */}
-                <button 
-                  onClick={() => handleRoleSelect('team_member')}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-tribal-500 hover:bg-tribal-50 transition-all group text-left"
-                >
-                  <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                    <Users size={24} />
+                    {/* Admin Role */}
+                    <button 
+                      onClick={() => handleRoleSelect('admin')}
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border border-dashed border-gray-300 hover:border-purple-500 hover:bg-purple-50 transition-all group text-left"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                        <ShieldCheck size={24} />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">{t('adminRole')}</h4>
+                        <p className="text-sm text-gray-500">{t('adminDesc')}</p>
+                      </div>
+                    </button>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">{t('teamMemberRole')}</h4>
-                    <p className="text-sm text-gray-500">{t('teamMemberDesc')}</p>
-                  </div>
-                </button>
-
-                {/* Admin Role */}
-                <button 
-                  onClick={() => handleRoleSelect('admin')}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-tribal-500 hover:bg-tribal-50 transition-all group text-left"
-                >
-                  <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <ShieldCheck size={24} />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">{t('adminRole')}</h4>
-                    <p className="text-sm text-gray-500">{t('adminDesc')}</p>
-                  </div>
-                </button>
+                )}
               </div>
             </>
           )}
